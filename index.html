@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>すすきのFreeC 求人アンケート結果レポート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a12;
+    --surface: #12121e;
+    --surface2: #1a1a2e;
+    --accent: #e63b6f;
+    --accent2: #f7c948;
+    --accent3: #4fc3f7;
+    --text: #f0f0f5;
+    --text-muted: #888899;
+    --border: rgba(255,255,255,0.08);
+    --glow: rgba(230, 59, 111, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(230,59,111,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(230,59,111,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 72px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(230,59,111,0.15);
+    border: 1px solid rgba(230,59,111,0.4);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 900;
+    font-size: clamp(28px, 5vw, 52px);
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  h1 span {
+    color: var(--accent);
+    position: relative;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(230,59,111,0.15);
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Grid layouts */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    transition: transform 0.3s;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Bar chart custom */
+  .bar-list {
+    width: 100%;
+  }
+
+  .bar-item {
+    margin-bottom: 14px;
+  }
+
+  .bar-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .bar-label { color: var(--text); font-weight: 400; }
+  .bar-value { color: var(--accent); font-weight: 700; }
+
+  .bar-track {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .bar-fill.blue {
+    background: linear-gradient(90deg, var(--accent3), #7c3aed);
+  }
+
+  .bar-fill.green {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+  }
+
+  /* Priority chart */
+  .priority-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .priority-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+
+  .priority-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    min-width: 24px;
+  }
+
+  .priority-name { font-size: 13px; flex: 1; }
+
+  .priority-bar-wrap {
+    width: 100px;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .priority-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .priority-count {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  /* Quote / insight box */
+  .insight-box {
+    background: linear-gradient(135deg, rgba(230,59,111,0.1), rgba(247,201,72,0.05));
+    border: 1px solid rgba(230,59,111,0.25);
+    border-radius: 20px;
+    padding: 32px;
+    margin-top: 8px;
+  }
+
+  .insight-box h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .insight-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .insight-list li {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .insight-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  /* Free text */
+  .comment-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .comment-card {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .comment-shop {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  /* FreeC interest big display */
+  .interest-display {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .interest-item {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    padding: 24px;
+    background: var(--surface2);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .interest-item.highlight {
+    background: linear-gradient(135deg, rgba(230,59,111,0.2), rgba(247,201,72,0.1));
+    border: 1px solid rgba(230,59,111,0.3);
+  }
+
+  .interest-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .interest-pct.main { color: var(--accent); }
+  .interest-pct.sub { color: var(--accent2); }
+  .interest-pct.muted { color: var(--text-muted); }
+
+  .interest-label { font-size: 12px; color: var(--text-muted); }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    .interest-display { flex-direction: column; }
+  }
+
+  /* Print */
+  @media print {
+    body { background: white; color: black; }
+    .card { border: 1px solid #ddd; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">Survey Report 2026</div>
+    <h1>すすきの<span>FreeC</span><br>求人アンケート結果</h1>
+    <p class="subtitle">掲載店舗様へのアンケート集計レポート</p>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">49</div>
+      <div class="stat-label">総回答数（2シート合計）</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">80<span style="font-size:28px">%</span></div>
+      <div class="stat-label">求人掲載中または掲載希望</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">92<span style="font-size:28px">%</span></div>
+      <div class="stat-label">FreeCへの興味あり・検討中</div>
+    </div>
+  </div>
+
+  <!-- Q1: 求人掲載状況 -->
+  <div class="section" style="animation-delay:0.15s">
+    <div class="section-title">Q. 求人広告に掲載していますか？</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">掲載状況（求人アンケートシート・37店舗）</div>
+        <div class="chart-wrap">
+          <canvas id="chart-posting"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">掲載状況（詳細版シート・12店舗）</div>
+        <div class="chart-wrap">
+          <canvas id="chart-posting2"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2: 従業員充足 -->
+  <div class="section" style="animation-delay:0.2s">
+    <div class="section-title">Q. 現在、従業員は足りていますか？（詳細版）</div>
+    <div class="card" style="max-width:500px">
+      <div class="card-title">従業員充足状況（12店舗）</div>
+      <div class="chart-wrap">
+        <canvas id="chart-staff"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3: 採用職種 -->
+  <div class="section" style="animation-delay:0.25s">
+    <div class="section-title">Q. 採用したいのはキャストですか黒服ですか？</div>
+    <div class="card">
+      <div class="card-title">採用したい職種（28店舗）</div>
+      <div class="bar-list">
+        <div class="bar-item">
+          <div class="bar-top"><span class="bar-label">キャスト</span><span class="bar-value">23店舗</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:82%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-top"><span class="bar-label">キャスト＋黒服</span><span class="bar-value">2店舗</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:7%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-top"><span class="bar-label">黒服</span><span class="bar-value">1店舗</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:4%"></div></div>
+        </div>
+        <div class="bar-item">
+          <div class="bar-top"><span class="bar-label">その他</span><span class="bar-value">2店舗</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:7%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4: 年齢層 & 経験 -->
+  <div class="section" style="animation-delay:0.3s">
+    <div class="section-title">Q. 採用希望の年齢層・経験について</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">採用希望年齢層（重複あり・28店舗）</div>
+        <div class="bar-list">
+          <div class="bar-item">
+            <div class="bar-top"><span class="bar-label">20代</span><span class="bar-value">23店舗</span></div>
+            <div class="bar-track"><div class="bar-fill blue" style="width:82%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-top"><span class="bar-label">30代</span><span class="bar-value">15店舗</span></div>
+            <div class="bar-track"><div class="bar-fill blue" style="width:54%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-top"><span class="bar-label">18〜20代前半</span><span class="bar-value">6店舗</span></div>
+            <div class="bar-track"><div class="bar-fill blue" style="width:21%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-top"><span class="bar-label">40代以上</span><span class="bar-value">3店舗</span></div>
+            <div class="bar-track"><div class="bar-fill blue" style="width:11%"></div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-top"><span class="bar-label">特になし</span><span class="bar-value">2店舗</span></div>
+            <div class="bar-track"><div class="bar-fill blue" style="width:7%"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">経験の有無について（28店舗）</div>
+        <div class="chart-wrap">
+          <canvas id="chart-exp"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5: 求人媒体数 & 予算 -->
+  <div class="section" style="animation-delay:0.35s">
+    <div class="section-title">Q. 掲載媒体数・月額予算について</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">現在の掲載媒体数（掲載中25店舗）</div>
+        <div class="chart-wrap">
+          <canvas id="chart-media"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">求人広告の月額予算（掲載中店舗）</div>
+        <div class="chart-wrap">
+          <canvas id="chart-budget"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q6: 重視ポイント -->
+  <div class="section" style="animation-delay:0.4s">
+    <div class="section-title">Q. 求人媒体を選ぶ際に重視するポイント（詳細版）</div>
+    <div class="card">
+      <div class="card-title">回答の集計（複数選択）</div>
+      <div class="priority-grid">
+        <div class="priority-item">
+          <span class="priority-rank">1</span>
+          <span class="priority-name">掲載料金</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:80%"></div></div>
+          <span class="priority-count">8件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">2</span>
+          <span class="priority-name">応募数</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:60%"></div></div>
+          <span class="priority-count">6件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">3</span>
+          <span class="priority-name">採用率</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:50%"></div></div>
+          <span class="priority-count">5件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">4</span>
+          <span class="priority-name">店舗の見せ方</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:30%"></div></div>
+          <span class="priority-count">3件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">5</span>
+          <span class="priority-name">更新のしやすさ</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:20%"></div></div>
+          <span class="priority-count">2件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">6</span>
+          <span class="priority-name">知名度</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:20%"></div></div>
+          <span class="priority-count">2件</span>
+        </div>
+        <div class="priority-item">
+          <span class="priority-rank">7</span>
+          <span class="priority-name">SNS連携・継続率など</span>
+          <div class="priority-bar-wrap"><div class="priority-bar" style="width:10%"></div></div>
+          <span class="priority-count">2件</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q7: FreeCへの興味 -->
+  <div class="section" style="animation-delay:0.45s">
+    <div class="section-title">Q. すすきのFreeCで求人企画があった場合、興味はありますか？（詳細版）</div>
+    <div class="card">
+      <div class="card-title">FreeCへの掲載意向（12店舗）</div>
+      <div class="interest-display">
+        <div class="interest-item highlight">
+          <div class="interest-pct main">83%</div>
+          <div class="interest-label">内容によって検討したい<br><strong style="color:var(--text)">10店舗</strong></div>
+        </div>
+        <div class="interest-item">
+          <div class="interest-pct sub">8%</div>
+          <div class="interest-label">ぜひ掲載したい<br><strong style="color:var(--text)">1店舗</strong></div>
+        </div>
+        <div class="interest-item">
+          <div class="interest-pct muted">8%</div>
+          <div class="interest-label">今のところ予定はない<br><strong style="color:var(--text)">1店舗</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- コメント -->
+  <div class="section" style="animation-delay:0.5s">
+    <div class="section-title">自由回答 ― 求人媒体に感じる効果・意見</div>
+    <div class="comment-grid">
+      <div class="comment-card">
+        <div class="comment-shop">スタジアム</div>
+        タウンワークに掲載するとインディードにも自動掲載されるため、露出が広がる点が便利。
+      </div>
+      <div class="comment-card">
+        <div class="comment-shop">終夜灯</div>
+        スカウト経由で先に面接してくれているため信頼感がある。
+      </div>
+      <div class="comment-card">
+        <div class="comment-shop">乃々留萌</div>
+        体入目的だけかどうかがわかるようなフィルタリング機能があると良い（採用の質を高めたい）。
+      </div>
+    </div>
+  </div>
+
+  <!-- INSIGHT -->
+  <div class="section" style="animation-delay:0.55s">
+    <div class="section-title">サマリー ― 主要インサイト</div>
+    <div class="insight-box">
+      <h3>📊 アンケートから見えた主なポイント</h3>
+      <ul class="insight-list">
+        <li>全体の約<strong>80%</strong>の店舗が現在求人掲載中、または掲載を希望しており、採用ニーズは高い。</li>
+        <li>採用対象は圧倒的に<strong>キャスト（82%）</strong>が中心で、20代・30代の年齢層が特に多く求められている。</li>
+        <li>経験の有無は<strong>「どちらでもよい」が75%以上</strong>を占め、間口の広い採用姿勢が主流。</li>
+        <li>求人媒体選びで最も重視されるのは<strong>「掲載料金」</strong>、次いで「応募数」「採用率」の順。コスパ重視の傾向が強い。</li>
+        <li>FreeCへの掲載意向は<strong>詳細版回答者の92%</strong>が「ぜひ」または「内容次第で検討」と回答。コンテンツ・価格設定次第で高い獲得可能性がある。</li>
+        <li>月額予算は<strong>5万〜10万円台</strong>が最多層。この価格帯でのプランが求められている。</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// Chart.js defaults
+Chart.defaults.color = '#888899';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
+
+const pinkPalette = ['#e63b6f','#f7c948','#4fc3f7','#a78bfa','#34d399','#fb923c'];
+
+// ドーナツ共通オプション
+const doughnutOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: '65%',
+  plugins: {
+    legend: {
+      position: 'right',
+      labels: { padding: 12, font: { size: 11 }, boxWidth: 12 }
+    },
+    tooltip: {
+      callbacks: {
+        label: ctx => ` ${ctx.label}: ${ctx.parsed}店舗`
+      }
+    }
+  }
+};
+
+// Q1 掲載状況（求人アンケートシート）
+new Chart(document.getElementById('chart-posting'), {
+  type: 'doughnut',
+  data: {
+    labels: ['掲載している', '掲載していない', '出している', '出していない'],
+    datasets: [{
+      data: [20, 9, 5, 3],
+      backgroundColor: pinkPalette,
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: doughnutOpts
+});
+
+// Q1 掲載状況（詳細版）
+new Chart(document.getElementById('chart-posting2'), {
+  type: 'doughnut',
+  data: {
+    labels: ['出している', '出していない', '出していないが出したい'],
+    datasets: [{
+      data: [7, 3, 2],
+      backgroundColor: pinkPalette,
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: doughnutOpts
+});
+
+// Q2 従業員充足
+new Chart(document.getElementById('chart-staff'), {
+  type: 'doughnut',
+  data: {
+    labels: ['足りていない', '足りている'],
+    datasets: [{
+      data: [7, 5],
+      backgroundColor: ['#e63b6f','#4fc3f7'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: doughnutOpts
+});
+
+// Q3 経験
+new Chart(document.getElementById('chart-exp'), {
+  type: 'doughnut',
+  data: {
+    labels: ['どちらでもよい', '未経験歓迎', 'できれば経験者希望', '経験者希望'],
+    datasets: [{
+      data: [21, 3, 3, 1],
+      backgroundColor: pinkPalette,
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: doughnutOpts
+});
+
+// 媒体数
+new Chart(document.getElementById('chart-media'), {
+  type: 'bar',
+  data: {
+    labels: ['1媒体', '2媒体', '3媒体'],
+    datasets: [{
+      label: '店舗数',
+      data: [13, 7, 5],
+      backgroundColor: ['#e63b6f','#f7c948','#4fc3f7'],
+      borderRadius: 8,
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}店舗` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { stepSize: 2 }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 予算
+new Chart(document.getElementById('chart-budget'), {
+  type: 'bar',
+  data: {
+    labels: ['1万円〜', '3万円〜', '5万円〜', '10万〜', '20万以上'],
+    datasets: [{
+      label: '店舗数',
+      data: [5, 2, 8, 7, 1],
+      backgroundColor: ['#4fc3f7','#a78bfa','#f7c948','#e63b6f','#34d399'],
+      borderRadius: 8,
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}店舗` } }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        ticks: { stepSize: 2 }
+      },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Animate bars on load
+window.addEventListener('load', () => {
+  document.querySelectorAll('.bar-fill').forEach(el => {
+    const w = el.style.width;
+    el.style.width = '0';
+    setTimeout(() => el.style.width = w, 300);
+  });
+  document.querySelectorAll('.priority-bar').forEach(el => {
+    const w = el.style.width;
+    el.style.width = '0';
+    setTimeout(() => el.style.width = w, 300);
+  });
+});
+</script>
+
+</body>
+</html>
