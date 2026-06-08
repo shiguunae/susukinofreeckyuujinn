@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -447,18 +446,10 @@
   <!-- Q1: 求人掲載状況 -->
   <div class="section" style="animation-delay:0.15s">
     <div class="section-title">Q. 求人広告に掲載していますか？</div>
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">掲載状況（求人アンケートシート・37店舗）</div>
-        <div class="chart-wrap">
-          <canvas id="chart-posting"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">掲載状況（詳細版シート・12店舗）</div>
-        <div class="chart-wrap">
-          <canvas id="chart-posting2"></canvas>
-        </div>
+    <div class="card" style="max-width:500px">
+      <div class="card-title">掲載状況（2シート合算・49店舗）</div>
+      <div class="chart-wrap">
+        <canvas id="chart-posting"></canvas>
       </div>
     </div>
   </div>
@@ -694,29 +685,14 @@ const doughnutOpts = {
   }
 };
 
-// Q1 掲載状況（求人アンケートシート）
+// Q1 掲載状況（2シート合算）
 new Chart(document.getElementById('chart-posting'), {
   type: 'doughnut',
   data: {
-    labels: ['掲載している', '掲載していない', '出している', '出していない'],
+    labels: ['掲載している', '掲載していない', '掲載していないが掲載したい'],
     datasets: [{
-      data: [20, 9, 5, 3],
-      backgroundColor: pinkPalette,
-      borderWidth: 0,
-      hoverOffset: 6
-    }]
-  },
-  options: doughnutOpts
-});
-
-// Q1 掲載状況（詳細版）
-new Chart(document.getElementById('chart-posting2'), {
-  type: 'doughnut',
-  data: {
-    labels: ['出している', '出していない', '出していないが出したい'],
-    datasets: [{
-      data: [7, 3, 2],
-      backgroundColor: pinkPalette,
+      data: [32, 15, 2],
+      backgroundColor: ['#e63b6f','#4fc3f7','#f7c948'],
       borderWidth: 0,
       hoverOffset: 6
     }]
